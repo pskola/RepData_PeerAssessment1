@@ -8,18 +8,78 @@ output:
 
 ## Loading and preprocessing the data
 
-
+```{r, message=FALSE}
+library(dplyr)
+if(!file.exists("activity.csv")) {
+  unzip("activity.zip")
+}
+f <- read.csv("activity.csv")
+```
 
 ## What is mean total number of steps taken per day?
 
+```{r summary, message=FALSE}
+summary <- f %>% 
+           group_by(date) %>% 
+           summarise(Total=sum(steps), Mean=mean(steps), Median=median(steps))
+hist(summary$Total, main="Histogram of steps/day", xlab="Total steps")
+summary
+```
 
 
 ## What is the average daily activity pattern?
 
+```{r}
+avg_step <- aggregate(f$steps, list(f$interval), mean, na.rm=TRUE)
+colnames(avg_step) <- c("interval", "mean")
+plot(avg_step, type='l', main="Daily activity pattern", xlab="5-minute intervals", ylab="avg steps across all days")
+box()
+```
 
+```{r max_interval}
+max_interval <- avg_step[which.max(avg_step$mean),]$interval
+```
+The 5-minute interval that, on average, contains the maximum number of steps is the `r max_interval`-th one.
 
 ## Imputing missing values
+```{r count_na}
+count_na <- sum(!complete.cases(f))
+```
+There are `r count_na` missing values in the dataset. The missing values will be substituted with the mean for the interval they belong to.
 
+```{r replace_na}
+na <- f[!complete.cases(f), ]
+nona <- f[complete.cases(f), ]
+na2mean <- na
+for(i in 1:nrow(avg_step)){
+  na2mean$steps[na2mean$interval %in% avg_step$interval[i]] <- avg_step$mean[i]
+}
+nona <- rbind(na2mean, nona)
+```
 
+```{r, message=FALSE}
+summary2 <- nona %>% 
+           group_by(date) %>% 
+           summarise(Total=sum(steps), Mean=mean(steps), Median=median(steps))
+hist(summary2$Total, main="Histogram of steps/day (no NA)", xlab="Total steps")
+summary2
+```
+Even though the mean and median has changed for the former NA observations, the over mean and median is unchanged (by definition) The general shape of the histogram did not change. However, the frequencies increased, particularity for the most "popular" step.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r}
+d <- nona %>% 
+     mutate(day = weekdays(as.Date(nona$date))) %>% 
+     mutate(week = factor(ifelse(day %in% c("Saturday", "Sunday"), "Weekend", "Weekday"), levels=c("Weekend", "Weekday")))
+avg_step_wd <- with(subset(d, week=="Weekday"), aggregate(steps, list(interval), mean))
+avg_step_we <- with(subset(d, week=="Weekend"), aggregate(steps, list(interval), mean))
+
+```
+
+```{r}
+par(mfrow=c(1,2))
+plot(avg_step_wd, type='l', main="Weekday activity pattern", xlab="5-minute intervals", ylab="avg steps")
+plot(avg_step_we, type='l', main="Weekend activity pattern", xlab="5-minute intervals", ylab="avg steps")
+
+```
+
