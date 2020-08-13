@@ -132,8 +132,8 @@ avg_step_we <- with(subset(d, week=="Weekend"), aggregate(steps, list(interval),
 
 ```r
 par(mfrow=c(1,2))
-plot(avg_step_wd, type='l', main="Weekday activity pattern", xlab="5-minute intervals", ylab="avg steps")
-plot(avg_step_we, type='l', main="Weekend activity pattern", xlab="5-minute intervals", ylab="avg steps")
+plot(avg_step_wd, type='l', main="Weekday activity pattern", xlab="5-minute intervals", ylab="avg steps", col="red")
+plot(avg_step_we, type='l', main="Weekend activity pattern", xlab="5-minute intervals", ylab="avg steps", col="blue")
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
